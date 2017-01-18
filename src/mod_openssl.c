@@ -46,6 +46,7 @@ typedef struct {
     buffer *ssl_verifyclient_username;
 
     unsigned short ssl_disable_client_renegotiation;
+    unsigned short ssl_read_ahead;
     unsigned short ssl_log_noise;
 
     /*(used only during startup; not patched)*/
@@ -699,7 +700,11 @@ network_init_ssl (server *srv, void *p_d)
                             s->ssl_pemfile);
             return -1;
         }
+<<<<<<< HEAD
         SSL_CTX_set_default_read_ahead(s->ssl_ctx, 1);
+=======
+        SSL_CTX_set_default_read_ahead(s->ssl_ctx, s->ssl_read_ahead);
+>>>>>>> 8ce49baba5db23f261f26d31ff4bfb5a9b2b70f9
         SSL_CTX_set_mode(s->ssl_ctx, SSL_CTX_get_mode(s->ssl_ctx)
                                    | SSL_MODE_ENABLE_PARTIAL_WRITE
                                    | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER
@@ -736,13 +741,14 @@ SETDEFAULTS_FUNC(mod_openssl_set_defaults)
         { "ssl.honor-cipher-order",            NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 7 */
         { "ssl.empty-fragments",               NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 8 */
         { "ssl.disable-client-renegotiation",  NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 9 */
-        { "ssl.verifyclient.activate",         NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 10 */
-        { "ssl.verifyclient.enforce",          NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 11 */
-        { "ssl.verifyclient.depth",            NULL, T_CONFIG_SHORT,   T_CONFIG_SCOPE_CONNECTION }, /* 12 */
-        { "ssl.verifyclient.username",         NULL, T_CONFIG_STRING,  T_CONFIG_SCOPE_CONNECTION }, /* 13 */
-        { "ssl.verifyclient.exportcert",       NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 14 */
-        { "ssl.use-sslv2",                     NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 15 */
-        { "ssl.use-sslv3",                     NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 16 */
+        { "ssl.read-ahead",                    NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 10 */
+        { "ssl.verifyclient.activate",         NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 11 */
+        { "ssl.verifyclient.enforce",          NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 12 */
+        { "ssl.verifyclient.depth",            NULL, T_CONFIG_SHORT,   T_CONFIG_SCOPE_CONNECTION }, /* 13 */
+        { "ssl.verifyclient.username",         NULL, T_CONFIG_STRING,  T_CONFIG_SCOPE_CONNECTION }, /* 14 */
+        { "ssl.verifyclient.exportcert",       NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 15 */
+        { "ssl.use-sslv2",                     NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 16 */
+        { "ssl.use-sslv3",                     NULL, T_CONFIG_BOOLEAN, T_CONFIG_SCOPE_CONNECTION }, /* 17 */
         { NULL,                         NULL, T_CONFIG_UNSET, T_CONFIG_SCOPE_UNSET }
     };
 
@@ -770,6 +776,7 @@ SETDEFAULTS_FUNC(mod_openssl_set_defaults)
         s->ssl_verifyclient_depth = 9;
         s->ssl_verifyclient_export_cert = 0;
         s->ssl_disable_client_renegotiation = 1;
+        s->ssl_read_ahead = (0 == i ? 1 : p->config_storage[0]->ssl_read_ahead);
 
         cv[0].destination = &(s->ssl_log_noise);
         cv[1].destination = &(s->ssl_enabled);
@@ -781,13 +788,14 @@ SETDEFAULTS_FUNC(mod_openssl_set_defaults)
         cv[7].destination = &(s->ssl_honor_cipher_order);
         cv[8].destination = &(s->ssl_empty_fragments);
         cv[9].destination = &(s->ssl_disable_client_renegotiation);
-        cv[10].destination = &(s->ssl_verifyclient);
-        cv[11].destination = &(s->ssl_verifyclient_enforce);
-        cv[12].destination = &(s->ssl_verifyclient_depth);
-        cv[13].destination = s->ssl_verifyclient_username;
-        cv[14].destination = &(s->ssl_verifyclient_export_cert);
-        cv[15].destination = &(s->ssl_use_sslv2);
-        cv[16].destination = &(s->ssl_use_sslv3);
+        cv[10].destination = &(s->ssl_read_ahead);
+        cv[11].destination = &(s->ssl_verifyclient);
+        cv[12].destination = &(s->ssl_verifyclient_enforce);
+        cv[13].destination = &(s->ssl_verifyclient_depth);
+        cv[14].destination = s->ssl_verifyclient_username;
+        cv[15].destination = &(s->ssl_verifyclient_export_cert);
+        cv[16].destination = &(s->ssl_use_sslv2);
+        cv[17].destination = &(s->ssl_use_sslv3);
 
         p->config_storage[i] = s;
 
@@ -829,6 +837,7 @@ mod_openssl_patch_connection (server *srv, connection *con, handler_ctx *hctx)
     PATCH(ssl_verifyclient_username);
     PATCH(ssl_verifyclient_export_cert);
     PATCH(ssl_disable_client_renegotiation);
+    PATCH(ssl_read_ahead);
 
     PATCH(ssl_log_noise);
 
@@ -863,6 +872,8 @@ mod_openssl_patch_connection (server *srv, connection *con, handler_ctx *hctx)
                 PATCH(ssl_verifyclient_export_cert);
             } else if (buffer_is_equal_string(du->key, CONST_STR_LEN("ssl.disable-client-renegotiation"))) {
                 PATCH(ssl_disable_client_renegotiation);
+            } else if (buffer_is_equal_string(du->key, CONST_STR_LEN("ssl.read-ahead"))) {
+                PATCH(ssl_read_ahead);
             } else if (buffer_is_equal_string(du->key, CONST_STR_LEN("debug.log-ssl-noise"))) {
                 PATCH(ssl_log_noise);
           #if 0 /*(not patched)*/
@@ -1111,7 +1122,8 @@ connection_read_cq_ssl (server *srv, connection *con,
               "SSL: renegotiation initiated by client, killing connection");
             return -1;
         }
-    } while (len > 0);
+    } while (len > 0
+             && (hctx->conf.ssl_read_ahead || SSL_pending(hctx->ssl) > 0));
 
     if (len < 0) {
         int oerrno = errno;
@@ -1189,11 +1201,13 @@ connection_read_cq_ssl (server *srv, connection *con,
             break;
         }
         return -1;
-    } else { /*(len == 0)*/
+    } else if (len == 0) {
         con->is_readable = 0;
         /* the other end close the connection -> KEEP-ALIVE */
 
         return -2;
+    } else {
+        return 0;
     }
 }
 
