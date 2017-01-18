@@ -216,7 +216,7 @@ if test "$WITH_MYSQL" != "no"; then
 
   AC_MSG_CHECKING(for MySQL libraries at)
   AC_MSG_RESULT($MYSQL_LIBS)
-dnl check for errmsg.h, which isn't installed by some versions of 3.21
+dnl check for errmsg.h, which isn\'t installed by some versions of 3.21
   old_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $MYSQL_INCLUDE"
   AC_CHECK_HEADERS(errmsg.h mysql.h)
@@ -411,6 +411,34 @@ if test "x$use_openssl" = "xyes"; then
     AC_SUBST(SSL_LIB)
     AC_SUBST(CRYPTO_LIB)
 fi
+
+dnl Check for mbedtls
+AC_MSG_CHECKING(for mbedTLS)
+AC_ARG_WITH(mbedtls,
+    AC_HELP_STRING([--with-mbedtls@<:@=DIR@:>@],[Include mbedTLS support (default no)]),
+    [WITH_MBEDTLS=$withval],[WITH_MBEDTLS=no])
+
+if test "$WITH_MBEDTLS" != "no"; then
+    use_mbedtls=yes
+    if test "$WITH_MBEDTLS" != "yes"; then
+	CPPFLAGS="$CPPFLAGS -I$WITH_OPENSSL/include"
+	LDFLAGS="$LDFLAGS -L$WITH_OPENSSL/lib"
+    fi
+else
+    use_mbedtls=no
+fi
+AC_MSG_RESULT([$use_mbedtls])
+AM_CONDITIONAL(BUILD_WITH_MBEDTLS, test ! $WITH_MBEDTLS = no)
+
+AC_ARG_WITH(mbedtls-includes,
+    AC_HELP_STRING([--with-mbedtls-includes=DIR],[mbedTLS includes]),
+    [ use_mbedtls=yes CPPFLAGS="$CPPFLAGS -I$withval" ]
+)
+
+AC_ARG_WITH(mbedtls-libs,
+    AC_HELP_STRING([--with-mbedtls-libs=DIR],[mbedTLS libraries]),
+    [ use_mbedtls=yes LDFLAGS="$LDFLAGS -L$withval" ]
+)
 
 AC_MSG_CHECKING(for perl regular expressions support)
 AC_ARG_WITH(pcre, AC_HELP_STRING([--with-pcre],[Enable pcre support (default yes)]),
@@ -962,6 +990,20 @@ else
 	no_build="$no_build $plugins"
 fi
 
+plugins="mod_openssl"
+if test ! "x$SSL_LIB" = x; then
+	do_build="$do_build $plugins"
+else
+	no_build="$no_build $plugins"
+fi
+
+plugins="mod_mbedtls"
+if test ! "x$MBEDTLS_LIB" = x; then
+	do_build="$do_build $plugins"
+else
+	no_build="$no_build $plugins"
+fi
+
 features="storage-gdbm"
 if test ! "x$GDBM_LIB" = x; then
 	enable_feature="$enable_feature $features"
@@ -1002,13 +1044,6 @@ if test ! "x$LDAP_LIB" = x; then
 	do_build="$do_build $plugins"
 else
 	no_build="$no_build $plugins"
-fi
-
-features="network-openssl"
-if test ! "x$SSL_LIB" = x; then
-	enable_feature="$enable_feature $features"
-else
-	disable_feature="$disable_feature $features"
 fi
 
 dnl no crypt call

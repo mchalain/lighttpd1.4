@@ -150,6 +150,9 @@ if env['with_mysql']:
 if env['with_openssl']:
 	modules['mod_openssl'] = { 'src' : [ 'mod_openssl.c' ], 'lib' : [ env['LIBSSL'], env['LIBCRYPTO'] ] }
 
+if env['with_mbedtls']:
+	modules['mod_mbedtls'] = { 'src' : [ 'mod_mbedtls.c' ], 'lib' : [ env['LIBMBEDTLS'] ] }
+
 staticenv = env.Clone(CPPFLAGS=[ env['CPPFLAGS'], '-DLIGHTTPD_STATIC' ])
 
 ## all the core-sources + the modules

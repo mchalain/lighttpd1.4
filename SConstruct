@@ -126,6 +126,7 @@ vars.AddVariables(
 	BoolVariable('with_gdbm', 'enable gdbm support', 'no'),
 	BoolVariable('with_fam', 'enable FAM/gamin support', 'no'),
 	BoolVariable('with_openssl', 'enable openssl support', 'no'),
+	BoolVariable('with_mbedtls', 'enable mbedtls support', 'no'),
 	BoolVariable('with_gzip', 'enable gzip compression', 'no'),
 	BoolVariable('with_bzip2', 'enable bzip2 compression', 'no'),
 	BoolVariable('with_lua', 'enable lua support for mod_cml', 'no'),
@@ -254,6 +255,10 @@ if 1:
 	if env['with_openssl']:
 		if autoconf.CheckLibWithHeader('ssl', 'openssl/ssl.h', 'C'):
 			autoconf.env.Append(CPPFLAGS = [ '-DHAVE_OPENSSL_SSL_H', '-DHAVE_LIBSSL'] , LIBSSL = 'ssl', LIBCRYPTO = 'crypto', LIBS = [ 'crypto' ])
+
+	if env['with_mbedtls']:
+		if autoconf.CheckLibWithHeader('ssl', 'mbedtls/ssl.h', 'C'):
+			autoconf.env.Append(CPPFLAGS = [ '-DHAVE_MBEDTLS_SSL_H', '-DHAVE_LIBMBEDTLS'] , LIBSSL = 'mbedtls', LIBS = [ 'mbedtls' ])
 
 	if env['with_gzip']:
 		if autoconf.CheckLibWithHeader('z', 'zlib.h', 'C'):
