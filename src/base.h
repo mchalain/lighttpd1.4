@@ -429,6 +429,7 @@ typedef struct connection {
 	struct server_socket *srv_socket;   /* reference to the server-socket */
 	int (* network_write)(struct server *srv, struct connection *con, chunkqueue *cq, off_t max_bytes);
 	int (* network_read)(struct server *srv, struct connection *con, chunkqueue *cq, off_t max_bytes);
+	void *network_data;
 
 	/* etag handling */
 	etag_flags_t etag_flags;
