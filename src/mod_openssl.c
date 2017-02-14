@@ -700,11 +700,7 @@ network_init_ssl (server *srv, void *p_d)
                             s->ssl_pemfile);
             return -1;
         }
-<<<<<<< HEAD
-        SSL_CTX_set_default_read_ahead(s->ssl_ctx, 1);
-=======
         SSL_CTX_set_default_read_ahead(s->ssl_ctx, s->ssl_read_ahead);
->>>>>>> 8ce49baba5db23f261f26d31ff4bfb5a9b2b70f9
         SSL_CTX_set_mode(s->ssl_ctx, SSL_CTX_get_mode(s->ssl_ctx)
                                    | SSL_MODE_ENABLE_PARTIAL_WRITE
                                    | SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER
@@ -1324,7 +1320,14 @@ CONNECTION_FUNC(mod_openssl_handle_con_close)
 {
     plugin_data *p = p_d;
     handler_ctx *hctx = con->plugin_ctx[p->id];
+<<<<<<< HEAD
     if (NULL != hctx) handler_ctx_free(hctx);
+=======
+    if (NULL != hctx) {
+        handler_ctx_free(hctx);
+        con->plugin_ctx[p->id] = NULL;
+    }
+>>>>>>> dceba6f1392239b59772c536dccfa2b279ddb0c0
 
     UNUSED(srv);
     return HANDLER_GO_ON;

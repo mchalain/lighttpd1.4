@@ -115,6 +115,8 @@ vars.AddVariables(
 	('sbindir', 'binary directory', '${prefix}/sbin'),
 	('libdir', 'library directory', '${prefix}/lib'),
 	PackageVariable('with_mysql', 'enable mysql support', 'no'),
+	PackageVariable('with_pgsql', 'enable pgsql support', 'no'),
+	PackageVariable('with_dbi', 'enable dbi support', 'no'),
 	PackageVariable('with_xml', 'enable xml support', 'no'),
 	PackageVariable('with_pcre', 'enable pcre support', 'yes'),
 	PathVariable('CC', 'path to the c-compiler', None),
@@ -228,6 +230,7 @@ if 1:
 	checkTypes(autoconf, Split('pid_t size_t off_t'))
 
 	autoconf.env.Append( LIBSQLITE3 = '', LIBXML2 = '', LIBMYSQL = '', LIBZ = '',
+		LIBPGSQL = '', LIBDBI = '',
 		LIBBZ2 = '', LIBCRYPT = '', LIBMEMCACHED = '', LIBFCGI = '', LIBPCRE = '',
 		LIBLDAP = '', LIBLBER = '', LIBLUA = '', LIBDL = '', LIBUUID = '',
 		LIBKRB5 = '', LIBGSSAPI_KRB5 = '', LIBGDBM = '', LIBSSL = '', LIBCRYPTO = '')
@@ -255,10 +258,13 @@ if 1:
 	if env['with_openssl']:
 		if autoconf.CheckLibWithHeader('ssl', 'openssl/ssl.h', 'C'):
 			autoconf.env.Append(CPPFLAGS = [ '-DHAVE_OPENSSL_SSL_H', '-DHAVE_LIBSSL'] , LIBSSL = 'ssl', LIBCRYPTO = 'crypto', LIBS = [ 'crypto' ])
+<<<<<<< HEAD
 
 	if env['with_mbedtls']:
 		if autoconf.CheckLibWithHeader('ssl', 'mbedtls/ssl.h', 'C'):
 			autoconf.env.Append(CPPFLAGS = [ '-DHAVE_MBEDTLS_SSL_H', '-DHAVE_LIBMBEDTLS'] , LIBSSL = 'mbedtls', LIBS = [ 'mbedtls' ])
+=======
+>>>>>>> dceba6f1392239b59772c536dccfa2b279ddb0c0
 
 	if env['with_gzip']:
 		if autoconf.CheckLibWithHeader('z', 'zlib.h', 'C'):
@@ -367,6 +373,23 @@ if env['with_mysql']:
 	env.Append(CPPFLAGS = [ '-DHAVE_MYSQL_H', '-DHAVE_LIBMYSQL' ], LIBMYSQL = 'mysqlclient')
 	env['LIBS'] = oldlib
 
+<<<<<<< HEAD
+=======
+if env['with_pgsql']:
+	pg_config = checkProgram(env, 'pgsql', 'pg_config')
+	oldlib = env['LIBS']
+	env['LIBS'] = []
+	env.ParseConfig(pg_config + ' --includedir --libdir')
+	env.Append(CPPFLAGS = [ '-DHAVE_PGSQL_H', '-DHAVE_LIBPGSQL' ], LIBPGSQL = 'pq')
+	env['LIBS'] = oldlib
+	#if autoconf.CheckLibWithHeader('pq', 'libpq-fe.h', 'C'):
+	#	env.Append(CPPFLAGS = [ '-DHAVE_PGSQL_H', '-DHAVE_LIBPGSQL' ], LIBPGSQL = 'pq')
+
+if env['with_dbi']:
+	if autoconf.CheckLibWithHeader('dbi', 'dbi/dbi.h', 'C'):
+		env.Append(CPPFLAGS = [ '-DHAVE_DBI_H', '-DHAVE_LIBDBI' ], LIBDBI = 'dbi')
+
+>>>>>>> dceba6f1392239b59772c536dccfa2b279ddb0c0
 if re.compile("cygwin|mingw|midipix").search(env['PLATFORM']):
 	env.Append(COMMON_LIB = 'bin')
 elif re.compile("darwin|aix").search(env['PLATFORM']):

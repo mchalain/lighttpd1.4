@@ -1594,7 +1594,7 @@ static int scgi_establish_connection(server *srv, handler_ctx *hctx) {
 				/* this is Linux only */
 
 				log_error_write(srv, __FILE__, __LINE__, "s",
-						"If this happend on Linux: You have been run out of local ports. "
+						"If this happened on Linux: You have been run out of local ports. "
 						"Check the manual, section Performance how to handle this.");
 			}
 
@@ -1742,6 +1742,8 @@ static int scgi_response_parse(server *srv, connection *con, plugin_data *p, buf
 					} else {
 						con->http_status = 502;
 					}
+					/* do not send Status to client */
+					buffer_reset(ds->value);
 				}
 				break;
 			case 8:
