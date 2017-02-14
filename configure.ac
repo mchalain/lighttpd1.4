@@ -510,7 +510,7 @@ else
     use_mbedtls=no
 fi
 AC_MSG_RESULT([$use_mbedtls])
-AM_CONDITIONAL(BUILD_WITH_MBEDTLS, test ! $WITH_MBEDTLS = no)
+AM_CONDITIONAL(BUILD_WITH_MBEDTLS, test ! $use_mbedtls = no)
 
 AC_ARG_WITH(mbedtls-includes,
     AC_HELP_STRING([--with-mbedtls-includes=DIR],[mbedTLS includes]),
@@ -521,6 +521,17 @@ AC_ARG_WITH(mbedtls-libs,
     AC_HELP_STRING([--with-mbedtls-libs=DIR],[mbedTLS libraries]),
     [ use_mbedtls=yes LDFLAGS="$LDFLAGS -L$withval" ]
 )
+
+if test "x$use_mbedtls" = "xyes"; then
+    AC_CHECK_HEADERS([mbedtls/ssl.h])
+    OLDLIBS="$LIBS"
+	AC_CHECK_LIB(mbedtls, mbedtls_ssl_config_init, 
+		[ MBEDTLS_LIB="-lmbedtls -lmbedx509 -lmbedcrypto"
+			AC_DEFINE(HAVE_MBEDTLS, [], [Have mbedtls])
+		])
+    LIBS="$OLDLIBS"
+    AC_SUBST(MBEDTLS_LIB)
+fi
 
 AC_MSG_CHECKING(for perl regular expressions support)
 AC_ARG_WITH(pcre, AC_HELP_STRING([--with-pcre],[Enable pcre support (default yes)]),
