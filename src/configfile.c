@@ -334,7 +334,7 @@ static int config_insert(server *srv) {
 			s->stream_response_body |= FDEVENT_STREAM_RESPONSE;
 		}
 
-#if !(defined HAVE_LIBSSL && defined HAVE_OPENSSL_SSL_H)
+#if !((defined HAVE_LIBSSL && defined HAVE_OPENSSL_SSL_H) || defined HAVE_MBEDTLS)
 		if (s->ssl_enabled) {
 			log_error_write(srv, __FILE__, __LINE__, "s",
 					"ssl support is missing, recompile with --with-openssl");
